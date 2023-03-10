@@ -51,14 +51,22 @@ theme_gtsummary_compact()
 ```{r}
 CH_HIV_data <- 
   read_rds(paste0(here::here(), "/CH_HIV_data.rds")) %>% 
-  filter(baseline_sample == 1)
+  group_by(MRN) %>% 
+  mutate(n = n(), .before = MRN) %>% 
+  ungroup() %>% 
+  filter(baseline_sample == 1 |
+           (n == 1 & baseline_sample == 2)) %>% 
+  select(-n)
 ```
 
 # Table 1
 ```{r}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
-         race, ethnicity, sex, hiv_status, CH_status, 
+         hiv_status, CH_status,
+         starts_with("grim"), starts_with("tnsc"),
+         starts_with("horvath"),
+         race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
@@ -72,7 +80,10 @@ CH_HIV_data %>%
 ```{r}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
-         race, ethnicity, sex, hiv_status, CH_status,
+         hiv_status, CH_status,
+         starts_with("grim"), starts_with("tnsc"),
+         starts_with("horvath"),
+         race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
@@ -87,7 +98,10 @@ CH_HIV_data %>%
 ```{r}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
-         race, ethnicity, sex, hiv_status, CH_status, 
+         hiv_status, CH_status,
+         starts_with("grim"), starts_with("tnsc"),
+         starts_with("horvath"),
+         race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
