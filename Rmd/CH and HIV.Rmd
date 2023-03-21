@@ -60,12 +60,14 @@ CH_HIV_data <-
 ```
 
 # Table 1
-```{r}
+```{r table 1}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
          hiv_status, CH_status,
          starts_with("grim"), starts_with("tnsc"),
          starts_with("horvath"),
+         starts_with("pheno_"),
+         starts_with("dunedin"),
          race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
@@ -76,13 +78,47 @@ CH_HIV_data %>%
   bold_labels()
 ```
 
+```{r plot clocks, fig.height=14, fig.width=12}
+CH_HIV_data %>% 
+  select(CH_status,
+         starts_with("grim"), starts_with("tnsc"),
+         starts_with("horvath"),
+         starts_with("pheno_"),
+         starts_with("dunedin")) %>% 
+  filter(!is.na(CH_status)) %>% 
+  pivot_longer(cols = -CH_status) %>% 
+  ggplot(aes(x= CH_status, y= value, color= CH_status))+
+  geom_boxplot()+
+  scale_color_manual(values = c("blue", "red"))+
+  facet_wrap(.~ name, scales = "free", ncol = 3)+
+  theme(axis.title.y = element_blank())+
+  stat_compare_means()
+
+CH_HIV_data %>% 
+  select(hiv_status,
+         starts_with("grim"), starts_with("tnsc"),
+         starts_with("horvath"),
+         starts_with("pheno_"),
+         starts_with("dunedin")) %>% 
+  filter(!is.na(hiv_status)) %>% 
+  pivot_longer(cols = -hiv_status) %>% 
+  ggplot(aes(x= hiv_status, y= value, color= hiv_status))+
+  geom_boxplot()+
+  scale_color_manual(values = c("darkgrey", "purple"))+
+  facet_wrap(.~ name, scales = "free", ncol = 3)+
+  theme(axis.title.y = element_blank())+
+  stat_compare_means()
+```
+
 # Table 2 - stratified by CH
-```{r}
+```{r table 2}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
          hiv_status, CH_status,
          starts_with("grim"), starts_with("tnsc"),
          starts_with("horvath"),
+         starts_with("pheno_"),
+         starts_with("dunedin"),
          race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
@@ -101,6 +137,8 @@ CH_HIV_data %>%
          hiv_status, CH_status,
          starts_with("grim"), starts_with("tnsc"),
          starts_with("horvath"),
+         starts_with("pheno_"),
+         starts_with("dunedin"),
          race, ethnicity, sex, 
          tnm_stage, clinical_stage, 
          vital_status, tx_summary, specimen_to_surgery_lag,
@@ -165,7 +203,7 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
 </div>
 </div>
 
-```{r}
+```{r cox}
 tbl1 <- CH_HIV_data %>% 
   select(CH_status, 
          age_at_diagnosis_corrected,
@@ -179,6 +217,23 @@ tbl1 <- CH_HIV_data %>%
 tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os, 
              event = CH_HIV_data$os_event) ~ 
                CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + hiv_status + clinical_stage, 
+             data =  CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
+
+tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
+
+tbl1 <- CH_HIV_data %>% 
+  select(CH_status, 
+         hiv_status) %>% 
+  tbl_uvregression(method = survival::coxph, 
+                   y = (Surv(time = CH_HIV_data$month_at_os, 
+                             event = CH_HIV_data$os_event)),
+                   exponentiate = TRUE) %>% 
+  bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>%
+  bold_labels() %>% italicize_levels()
+tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os, 
+             event = CH_HIV_data$os_event) ~ 
+               CH_status + hiv_status, 
              data =  CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -332,4 +387,48 @@ tbl2 <- coxph(Surv(time = CH_data$month_at_os,
 tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
 ```
 
+```{r}
+ggsurvplot(survfit(Surv(month_at_os, os_event) ~ CH_status, 
+                   data=CH_HIV_data),
+           title = "OS Analysis",
+           font.main = c(20, "bold", "black"),
+           font.x = c(18, "bold", "black"),
+           font.y = c(18, "bold", "black"),
+           font.legend = c(16, "black"),
+           font.tickslab = c(16, "bold", "black"),
+           size = 1.5,
 
+           xlab = "Time in months",
+           legend = "top",
+           legend.title = "CH status",
+           legend.labs = c("No", "CH"),
+           palette = c("blue", "red"),
+           pval = TRUE,
+           conf.int = FALSE,
+           # Censor
+           censor = TRUE
+) + guides(colour = guide_legend(ncol = 1))
+```
+
+```{r}
+ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status, 
+                   data=CH_HIV_data),
+           title = "OS Analysis",
+           font.main = c(20, "bold", "black"),
+           font.x = c(18, "bold", "black"),
+           font.y = c(18, "bold", "black"),
+           font.legend = c(16, "black"),
+           font.tickslab = c(16, "bold", "black"),
+           size = 1.5,
+
+           xlab = "Time in months",
+           legend = "top",
+           legend.title = "HIV status",
+           legend.labs = c("negative", "positive"),
+           palette = c("darkgrey", "purple"),
+           pval = TRUE,
+           conf.int = FALSE,
+           # Censor
+           censor = TRUE
+) + guides(colour = guide_legend(ncol = 1))
+```

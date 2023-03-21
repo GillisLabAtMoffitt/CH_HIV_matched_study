@@ -7,13 +7,17 @@ library(lubridate)
 path <- fs::path("", "Volumes", "Gillis_Research","Christelle Colin-Leitzinger", "CH and HIV")
 
 clinical_data <- 
-  # readxl::read_xlsx(paste0(path, "/raw data/Sample_Sheet_withEpiAge_022723.xlsx"),
-  readxl::read_xlsx(paste0(here::here(), "/Sample_Sheet_withEpiAge_022723.xlsx"),
-                    sheet = "Sample_Sheet_20220811") %>% 
-  janitor::clean_names()
+  # readxl::read_xlsx(paste0(path, "/raw data/Sample_Sheet_withEpiAge_20230316.xlsx"),
+  # readxl::read_xlsx(paste0("/Users/colinccm/Documents/GitHub/Gillis", "/Sample_Sheet_withEpiAge_Methylation_Analysis_Cohort_20230321.xlsx")#,
+  readxl::read_xlsx(paste0(here::here(), "/hiv_data.xlsx")#,
+                                      # sheet = "Sample_Sheet_20220811"
+                    ) %>% 
+  janitor::clean_names() %>% 
+  filter(study_id != "P30_S3_009" | is.na(study_id))
 
 CH_status <- 
-  readxl::read_xlsx(paste0(path, "/raw data/CICPT2987-combined_FINALcalls_02.21.23.xlsx")) %>% 
+  # readxl::read_xlsx(paste0(path, "/raw data/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
+  readxl::read_xlsx(paste0(here::here(), "/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
   rename(CH_status = CH) %>% 
   mutate(MRN = as.character(MRN))
 
