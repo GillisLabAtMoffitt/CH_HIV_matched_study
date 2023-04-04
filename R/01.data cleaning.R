@@ -15,6 +15,16 @@ clinical_data <-
   janitor::clean_names() %>% 
   filter(study_id != "P30_S3_009" | is.na(study_id))
 
+dictionary <- 
+  readxl::read_xlsx(paste0(here::here(), "/Table 1_new variables-modified.xlsx"),
+                    sheet = "new variables-modified"
+  )
+
+treatment <- 
+  readxl::read_xlsx(paste0(here::here(), "/CH_HIV_data_treatment status_NG_03.31.23.xlsx")
+  ) %>% 
+  select(chip_barcode, treatment_status)
+
 CH_status <- 
   # readxl::read_xlsx(paste0(path, "/raw data/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
   readxl::read_xlsx(paste0(here::here(), "/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
@@ -67,21 +77,33 @@ clinical_data_C <- clinical_data %>%
 CH_HIV_data <- 
   bind_rows(clinical_data_A, clinical_data_B, clinical_data_C) %>% 
   select(chip_barcode, sample_id_for_chip, sample_id_from_ab,CH_status, MRN, patient_id, batch, everything()) %>% 
+  left_join(.,
+            dictionary %>% filter(Variable == "Race") %>% select(Category, new_race = `New Category`),
+            by= c("race" = "Category")) %>% 
+  left_join(.,
+            dictionary %>% filter(Variable == "Ethnicity") %>% select(Category, new_ethnicity = `New Category`),
+            by= c("ethnicity" = "Category")) %>% 
+  left_join(.,
+            dictionary %>% filter(Variable == "Primary Site") %>% select(Category, new_primary_site = `New Category`),
+            by= c("primary_site" = "Category")) %>% 
+  left_join(.,
+            dictionary %>% filter(Variable == "TNM Stage") %>% select(Category, new_tnm_stage = `New Category`),
+            by= c("tnm_stage" = "Category")) %>% 
+  left_join(., treatment, 
+            by= c("chip_barcode")) %>% 
+  mutate(treatment_status = factor(treatment_status, levels = c("before", "after start"))) %>% 
   mutate(os_event = case_when(
     vital_status == 1               ~ 0,
     vital_status == 2               ~ 1
   )) %>% 
   mutate(month_at_os = interval(start = treatment_date, end = vital_status_date)/
            duration(n=1, units = "months")) %>% 
-  mutate(ethnicity = case_when(
-    ethnicity == "NON-SPANISH"      ~ "Non-Hispanic",
-    TRUE                            ~ "Hispanic"
-  ), ethnicity = factor(ethnicity, levels = c("Non-Hispanic", "Hispanic"))) %>% 
-  mutate(race = case_when(
-    race == "WHITE"                 ~ "White",
-    race == "BLACK"                 ~ "Black",
-    TRUE                            ~ "Other"
-  ), race = factor(race, levels = c("White", "Black", "Other"))) %>% 
+  mutate(new_ethnicity = factor(new_ethnicity, levels = c("Non-Hispanic", "Hispanic"))) %>% 
+  mutate(race = factor(race, levels = c("White", "Black", "Other"))) %>% 
+  mutate(new_tnm_stage = case_when(
+    new_tnm_stage == "Unknown"      ~ NA_character_,
+    TRUE                            ~ new_tnm_stage
+  )) %>% 
   mutate(clinical_stage = case_when(
     tnm_stage == "99 UNK"           ~ NA_character_,
     str_detect(tnm_stage, "1|2")    ~ "I-II",
