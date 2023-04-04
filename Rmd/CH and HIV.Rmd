@@ -68,11 +68,12 @@ CH_HIV_data %>%
          starts_with("horvath"),
          starts_with("pheno_"),
          starts_with("dunedin"),
-         race, ethnicity, sex, 
-         tnm_stage, clinical_stage, 
-         vital_status, tx_summary, specimen_to_surgery_lag,
+         new_race, new_ethnicity, sex, 
+         new_tnm_stage, clinical_stage, 
+         vital_status, tx_summary, treatment_status,
+         specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         primary_site
+         new_primary_site
          ) %>% 
   tbl_summary() %>% 
   bold_labels()
@@ -119,15 +120,36 @@ CH_HIV_data %>%
          starts_with("horvath"),
          starts_with("pheno_"),
          starts_with("dunedin"),
-         race, ethnicity, sex, 
-         tnm_stage, clinical_stage, 
-         vital_status, tx_summary, specimen_to_surgery_lag,
+         new_race, new_ethnicity, sex, 
+         new_tnm_stage, clinical_stage, 
+         vital_status, tx_summary, treatment_status,
+         specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         primary_site
+         new_primary_site
          ) %>% 
   tbl_summary(by = CH_status) %>% 
   bold_labels() %>% 
   add_p() %>% bold_p(t=.05) %>% add_overall()
+```
+
+```{r}
+tbl1 <- CH_HIV_data %>% 
+  filter(CH_status == "CH") %>% 
+  select(hiv_status,
+         new_primary_site
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05) %>% add_overall()
+tbl2 <- CH_HIV_data %>% 
+  filter(CH_status == "NO") %>% 
+  select(hiv_status,
+         new_primary_site
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05) %>% add_overall()
+tbl_merge(list(tbl1, tbl2), tab_spanner = c("CH", "No CH"))
 ```
 
 # Table 3 - stratified by HIV
@@ -139,11 +161,12 @@ CH_HIV_data %>%
          starts_with("horvath"),
          starts_with("pheno_"),
          starts_with("dunedin"),
-         race, ethnicity, sex, 
-         tnm_stage, clinical_stage, 
-         vital_status, tx_summary, specimen_to_surgery_lag,
+         new_race, new_ethnicity, sex, 
+         new_tnm_stage, clinical_stage, 
+         vital_status, tx_summary, treatment_status,
+         specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         primary_site
+         new_primary_site
          ) %>% 
   tbl_summary(by = hiv_status) %>% 
   bold_labels() %>% 
@@ -207,7 +230,7 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
 tbl1 <- CH_HIV_data %>% 
   select(CH_status, 
          age_at_diagnosis_corrected,
-         race, ethnicity, sex, hiv_status, clinical_stage) %>% 
+         new_race, new_ethnicity, sex, hiv_status, clinical_stage) %>% 
   tbl_uvregression(method = survival::coxph, 
                    y = (Surv(time = CH_HIV_data$month_at_os, 
                              event = CH_HIV_data$os_event)),
@@ -216,7 +239,7 @@ tbl1 <- CH_HIV_data %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os, 
              event = CH_HIV_data$os_event) ~ 
-               CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + hiv_status + clinical_stage, 
+               CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + hiv_status + clinical_stage, 
              data =  CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -243,7 +266,7 @@ Cox Proportion Hazard Assumption - No violation of the model
 ```{r}
 coxph(Surv(time = CH_HIV_data$month_at_os, 
              event = CH_HIV_data$os_event) ~ 
-               CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + hiv_status + clinical_stage, 
+               CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + hiv_status + clinical_stage, 
              data =  CH_HIV_data) %>% 
   cox.zph()
 ```
@@ -252,7 +275,7 @@ coxph(Surv(time = CH_HIV_data$month_at_os,
 # tbl1 <- CH_HIV_data %>% 
 #   select(CH_status, 
 #          age_at_diagnosis_corrected,
-#          race, ethnicity, sex, hiv_status, clinical_stage) %>% 
+#          new_race, new_ethnicity, sex, hiv_status, clinical_stage) %>% 
 #   tbl_uvregression(method = survival::coxph, 
 #                    y = (Surv(time = CH_HIV_data$month_at_os, 
 #                              event = CH_HIV_data$os_event)),
@@ -261,7 +284,7 @@ coxph(Surv(time = CH_HIV_data$month_at_os,
 #   bold_labels() %>% italicize_levels()
 # tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os, 
 #              event = CH_HIV_data$os_event) ~ 
-#                CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + hiv_status + clinical_stage, 
+#                CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + hiv_status + clinical_stage, 
 #              data =  CH_HIV_data) %>%
 #   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 # 
@@ -302,7 +325,7 @@ HIV_pos <- CH_HIV_data %>%
 tbl1 <- HIV_pos %>% 
   select(CH_status, 
          age_at_diagnosis_corrected,
-         race, ethnicity, sex, clinical_stage) %>% 
+         new_race, new_ethnicity, sex, clinical_stage) %>% 
   tbl_uvregression(method = survival::coxph, 
                    y = (Surv(time = HIV_pos$month_at_os, 
                              event = HIV_pos$os_event)),
@@ -311,7 +334,7 @@ tbl1 <- HIV_pos %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = HIV_pos$month_at_os, 
              event = HIV_pos$os_event) ~ 
-               CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + clinical_stage, 
+               CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + clinical_stage, 
              data =  HIV_pos) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -325,7 +348,7 @@ HIV_neg <- CH_HIV_data %>%
 tbl1 <- HIV_neg %>% 
   select(CH_status, 
          age_at_diagnosis_corrected,
-         race, ethnicity, sex, clinical_stage) %>% 
+         new_race, new_ethnicity, sex, clinical_stage) %>% 
   tbl_uvregression(method = survival::coxph, 
                    y = (Surv(time = HIV_neg$month_at_os, 
                              event = HIV_neg$os_event)),
@@ -334,7 +357,7 @@ tbl1 <- HIV_neg %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = HIV_neg$month_at_os, 
              event = HIV_neg$os_event) ~ 
-               CH_status + age_at_diagnosis_corrected + race + ethnicity + sex + clinical_stage, 
+               CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + clinical_stage, 
              data =  HIV_neg) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -348,7 +371,7 @@ No_CH <- CH_HIV_data %>%
 tbl1 <- No_CH %>% 
   select(hiv_status, 
          age_at_diagnosis_corrected,
-         race, ethnicity, sex, clinical_stage) %>% 
+         new_race, new_ethnicity, sex, clinical_stage) %>% 
   tbl_uvregression(method = survival::coxph, 
                    y = (Surv(time = No_CH$month_at_os, 
                              event = No_CH$os_event)),
@@ -357,7 +380,7 @@ tbl1 <- No_CH %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = No_CH$month_at_os, 
              event = No_CH$os_event) ~ 
-               hiv_status + age_at_diagnosis_corrected + race + ethnicity + sex + clinical_stage, 
+               hiv_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + clinical_stage, 
              data =  No_CH) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -371,7 +394,7 @@ CH_data <- CH_HIV_data %>%
 tbl1 <- CH_data %>% 
   select(hiv_status, 
          age_at_diagnosis_corrected,
-         race, ethnicity, sex, clinical_stage) %>% 
+         new_race, new_ethnicity, sex, clinical_stage) %>% 
   tbl_uvregression(method = survival::coxph, 
                    y = (Surv(time = CH_data$month_at_os, 
                              event = CH_data$os_event)),
@@ -380,7 +403,7 @@ tbl1 <- CH_data %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = CH_data$month_at_os, 
              event = CH_data$os_event) ~ 
-               hiv_status + age_at_diagnosis_corrected + race + ethnicity + sex + clinical_stage, 
+               hiv_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + clinical_stage, 
              data =  CH_data) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
 
@@ -432,3 +455,20 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
            censor = TRUE
 ) + guides(colour = guide_legend(ncol = 1))
 ```
+
+# Logistic regression
+```{r}
+glm(CH_status ~
+      hiv_status + age_at_diagnosis_corrected + new_race + sex + treatment_status,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
+
+
+
+
+
+
