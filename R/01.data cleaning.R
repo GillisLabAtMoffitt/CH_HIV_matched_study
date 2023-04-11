@@ -16,7 +16,7 @@ clinical_data <-
   filter(study_id != "P30_S3_009" | is.na(study_id))
 
 dictionary <- 
-  readxl::read_xlsx(paste0(here::here(), "/Table 1_new variables-modified.xlsx"),
+  readxl::read_xlsx(paste0(here::here(), "/Table 1_new variables-modified04.04.23.xlsx"),
                     sheet = "new variables-modified"
   )
 
@@ -80,6 +80,7 @@ CH_HIV_data <-
   left_join(.,
             dictionary %>% filter(Variable == "Race") %>% select(Category, new_race = `New Category`),
             by= c("race" = "Category")) %>% 
+  mutate(new_race = factor(new_race, levels= c("White", "Black", "Other"))) %>% 
   left_join(.,
             dictionary %>% filter(Variable == "Ethnicity") %>% select(Category, new_ethnicity = `New Category`),
             by= c("ethnicity" = "Category")) %>% 
@@ -89,8 +90,12 @@ CH_HIV_data <-
   left_join(.,
             dictionary %>% filter(Variable == "TNM Stage") %>% select(Category, new_tnm_stage = `New Category`),
             by= c("tnm_stage" = "Category")) %>% 
+  left_join(.,
+            dictionary %>% filter(Variable == "Tx Summary") %>% select(Category, new_tx_summary = `New Category`),
+            by= c("tx_summary" = "Category")) %>% 
   left_join(., treatment, 
             by= c("chip_barcode")) %>% 
+  mutate(sex = factor(sex, levels= c("MALE", "FEMALE"))) %>% 
   mutate(treatment_status = factor(treatment_status, levels = c("before", "after start"))) %>% 
   mutate(os_event = case_when(
     vital_status == 1               ~ 0,

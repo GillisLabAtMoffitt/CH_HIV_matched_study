@@ -59,7 +59,7 @@ CH_HIV_data <-
   select(-n)
 ```
 
-# Table 1
+# Table 1 - Clinical in Overall Population
 ```{r table 1}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
@@ -70,7 +70,8 @@ CH_HIV_data %>%
          starts_with("dunedin"),
          new_race, new_ethnicity, sex, 
          new_tnm_stage, clinical_stage, 
-         vital_status, tx_summary, treatment_status,
+         vital_status, tx_summary, new_tx_summary, 
+         treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
          new_primary_site
@@ -111,7 +112,7 @@ CH_HIV_data %>%
   stat_compare_means()
 ```
 
-# Table 2 - stratified by CH
+# Table 2 - Clinical by CH
 ```{r table 2}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
@@ -122,7 +123,8 @@ CH_HIV_data %>%
          starts_with("dunedin"),
          new_race, new_ethnicity, sex, 
          new_tnm_stage, clinical_stage, 
-         vital_status, tx_summary, treatment_status,
+         vital_status, tx_summary, new_tx_summary,
+         treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
          new_primary_site
@@ -131,7 +133,7 @@ CH_HIV_data %>%
   bold_labels() %>% 
   add_p() %>% bold_p(t=.05) %>% add_overall()
 ```
-
+New_primary_site Stratified by CH
 ```{r}
 tbl1 <- CH_HIV_data %>% 
   filter(CH_status == "CH") %>% 
@@ -151,8 +153,80 @@ tbl2 <- CH_HIV_data %>%
   add_p() %>% bold_p(t=.05) %>% add_overall()
 tbl_merge(list(tbl1, tbl2), tab_spanner = c("CH", "No CH"))
 ```
+CH by Primary Site
+```{r}
+CH_HIV_data %>% 
+  select(CH_status,
+         new_primary_site
+         ) %>% 
+  tbl_summary(by = new_primary_site) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05) %>% add_overall()
+```
+CH _vs_ HIV Stratified by Primary Site
+```{r}
+tbl1 <- CH_HIV_data %>% 
+  filter(new_primary_site == "Breast") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl2 <- CH_HIV_data %>% 
+  filter(new_primary_site == "GI") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl3 <- CH_HIV_data %>% 
+  filter(new_primary_site == "GU") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl4 <- CH_HIV_data %>% 
+  filter(new_primary_site == "GYN") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl5 <- CH_HIV_data %>% 
+  filter(new_primary_site == "Head and Neck") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl6 <- CH_HIV_data %>% 
+  filter(new_primary_site == "Lung") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
+tbl7 <- CH_HIV_data %>% 
+  filter(new_primary_site == "Skin") %>% 
+  select(CH_status,
+         hiv_status
+         ) %>% 
+  tbl_summary(by = hiv_status) %>% 
+  bold_labels() %>% 
+  add_p() %>% bold_p(t=.05)
 
-# Table 3 - stratified by HIV
+tbl_merge(list(tbl1, tbl2, tbl3, tbl4, tbl5, tbl6, tbl7), 
+          tab_spanner = c("Breast", "GI", "GU", "GYN", "Head and Neck", "Lung", "Skin"))
+```
+
+# Table 3 - Clinical by HIV
 ```{r}
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
@@ -163,7 +237,8 @@ CH_HIV_data %>%
          starts_with("dunedin"),
          new_race, new_ethnicity, sex, 
          new_tnm_stage, clinical_stage, 
-         vital_status, tx_summary, treatment_status,
+         vital_status, tx_summary, new_tx_summary, 
+         treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
          new_primary_site
