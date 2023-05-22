@@ -6,19 +6,30 @@ library(lubridate)
 ################################################################################# I ### Load data
 path <- fs::path("", "Volumes", "Gillis_Research","Christelle Colin-Leitzinger", "CH and HIV")
 
+id_to_remove <- read_csv(paste0(here::here(), "/id_to_remove_from_analysis.csv"))
+                         
 clinical_data <- 
-  # readxl::read_xlsx(paste0(path, "/raw data/Sample_Sheet_withEpiAge_20230316.xlsx"),
-  # readxl::read_xlsx(paste0("/Users/colinccm/Documents/GitHub/Gillis", "/Sample_Sheet_withEpiAge_Methylation_Analysis_Cohort_20230321.xlsx")#,
-  readxl::read_xlsx(paste0(here::here(), "/hiv_data.xlsx")#,
-                                      # sheet = "Sample_Sheet_20220811"
+  # readxl::read_xlsx(paste0(here::here(), "/Sample_Sheet_withEpiAge_20230316.xlsx")#, # For full data
+  # readxl::read_xlsx(paste0(here::here(), "/hiv_data.xlsx")#, # For short data
+  readxl::read_xlsx(paste0(here::here(), "/allSample_wClocks_M4Madded_20230509.xlsx")#, # For new clocks
                     ) %>% 
   janitor::clean_names() %>% 
-  filter(study_id != "P30_S3_009" | is.na(study_id))
+  filter(study_id != id_to_remove$id_to_remove | is.na(study_id))
 
 dictionary <- 
   readxl::read_xlsx(paste0(here::here(), "/Table 1_new variables-modified04.04.23.xlsx"),
                     sheet = "new variables-modified"
   )
+
+smoking_CR <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+                             sheet = "Smoking_from_CR"
+)
+smoking_CERNER <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+                                sheet = "Smoking_from_Cerner"
+)
+smoking_patientquestionnaire <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+                                sheet = "Summary_for_smoking"
+)
 
 treatment <- 
   readxl::read_xlsx(paste0(here::here(), "/CH_HIV_data_treatment status_NG_03.31.23.xlsx")
@@ -74,6 +85,35 @@ clinical_data_C <- clinical_data %>%
                    "sample_id_for_chip" = "sample_id_fo_chip_from_du",
                    "study_id" = "study_id_correct"))
 
+smoking <- smoking_CR %>% 
+  select(PATIENT_ID, DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>% 
+  distinct() %>% 
+  arrange(PATIENT_ID, DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>% 
+  distinct(PATIENT_ID, .keep_all = TRUE) %>% 
+  full_join(., smoking_CERNER %>% 
+              select(MRN, PATIENT_ID, RECENTLY_REPORTED_CIGARETTE_SMOKING_SV2_DESC),
+            by = "PATIENT_ID") %>% 
+  full_join(., smoking_patientquestionnaire %>% 
+              select(PATIENT_ID, RECENTLY_REPORTED_CIGARETTE_SMOKING_SV2_DESC),
+            by = "PATIENT_ID") %>% 
+  mutate(DERIVED_TOBACCO_SMOKING_STATUS_DESC = case_when(
+    DERIVED_TOBACCO_SMOKING_STATUS_DESC == "Unknown"             ~ NA_character_,
+    DERIVED_TOBACCO_SMOKING_STATUS_DESC == "Current smoker"      ~ "Ever",
+    DERIVED_TOBACCO_SMOKING_STATUS_DESC == "Former smoker"       ~ "Ever",
+    DERIVED_TOBACCO_SMOKING_STATUS_DESC == "Never smoker"        ~ "Never"
+  )) %>% 
+  mutate(across(c("RECENTLY_REPORTED_CIGARETTE_SMOKING_SV2_DESC.x",
+                  "RECENTLY_REPORTED_CIGARETTE_SMOKING_SV2_DESC.y"), 
+                ~ case_when(
+                  . == "Missing"  ~ NA_character_,
+                  TRUE                                                         ~ .
+                )
+                  )) %>% 
+  mutate(across(-c("MRN", "PATIENT_ID"), ~factor(., levels = c("Never", "Ever"))))
+
+# 9351025, 11051777
+
+
 CH_HIV_data <- 
   bind_rows(clinical_data_A, clinical_data_B, clinical_data_C) %>% 
   select(chip_barcode, sample_id_for_chip, sample_id_from_ab,CH_status, MRN, patient_id, batch, everything()) %>% 
@@ -95,11 +135,22 @@ CH_HIV_data <-
             by= c("tx_summary" = "Category")) %>% 
   left_join(., treatment, 
             by= c("chip_barcode")) %>% 
+  left_join(., smoking,
+            by= "MRN") %>% 
   mutate(sex = factor(sex, levels= c("MALE", "FEMALE"))) %>% 
   mutate(treatment_status = factor(treatment_status, levels = c("before", "after start"))) %>% 
   mutate(os_event = case_when(
     vital_status == 1               ~ 0,
     vital_status == 2               ~ 1
+  )) %>% 
+  mutate(across(c("treatment_date", "specimen_to_surgery_lag", "specimen_to_treatment_lag"), ~ na_if(., "NA"))) %>% 
+  mutate(across(c("specimen_to_surgery_lag", "specimen_to_treatment_lag"), ~ as.numeric(.))) %>% 
+  # mutate(treatment_date = na_if(treatment_date, "NA")) %>% 
+  mutate(across(c("dob", "specimen_date", "treatment_date", "vital_status_date"), ~as.Date(.))) %>% 
+  mutate(age_at_specimen = case_when(
+    !is.na(age_at_specimen)           ~ age_at_specimen,
+    is.na(age_at_specimen)            ~ round(interval(start = dob, end = specimen_date)/
+                                     duration(n=1, units = "years"), 0)
   )) %>% 
   mutate(month_at_os = interval(start = treatment_date, end = vital_status_date)/
            duration(n=1, units = "months")) %>% 
@@ -131,7 +182,7 @@ CH_HIV_data <-
 
 
 
-write_rds(CH_HIV_data, "CH_HIV_data.rds")
+write_rds(CH_HIV_data, "CH_HIV_data_full.rds")
 write_csv(CH_HIV_data, "CH_HIV_data.csv")
 
 # End cleaning
