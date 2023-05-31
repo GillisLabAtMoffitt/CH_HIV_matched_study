@@ -305,26 +305,26 @@ CH_HIV_data %>%
 <!-- </div> -->
 <!-- </div> -->
 
-## 1.MV Cox model w/ CH+HIV+age+race+eth+sex+clinicalstage
-```{r cox}
-tbl1 <- CH_HIV_data %>% 
-  select(CH_status, 
-         age_at_diagnosis_corrected,
-         new_race, new_ethnicity, sex, hiv_status, clinical_stage) %>% 
-  tbl_uvregression(method = survival::coxph, 
-                   y = (Surv(time = CH_HIV_data$month_at_os, 
-                             event = CH_HIV_data$os_event)),
-                   exponentiate = TRUE) %>% 
-  bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>%
-  bold_labels() %>% italicize_levels()
-tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os, 
-             event = CH_HIV_data$os_event) ~ 
-               CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + hiv_status + clinical_stage, 
-             data =  CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05)
+<!-- ## 1.MV Cox model w/ CH+HIV+age+race+eth+sex+clinicalstage -->
+<!-- ```{r cox} -->
+<!-- tbl1 <- CH_HIV_data %>%  -->
+<!--   select(CH_status,  -->
+<!--          age_at_diagnosis_corrected, -->
+<!--          new_race, new_ethnicity, sex, hiv_status, clinical_stage) %>%  -->
+<!--   tbl_uvregression(method = survival::coxph,  -->
+<!--                    y = (Surv(time = CH_HIV_data$month_at_os,  -->
+<!--                              event = CH_HIV_data$os_event)), -->
+<!--                    exponentiate = TRUE) %>%  -->
+<!--   bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>% -->
+<!--   bold_labels() %>% italicize_levels() -->
+<!-- tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os,  -->
+<!--              event = CH_HIV_data$os_event) ~  -->
+<!--                CH_status + age_at_diagnosis_corrected + new_race + new_ethnicity + sex + hiv_status + clinical_stage,  -->
+<!--              data =  CH_HIV_data) %>% -->
+<!--   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) -->
 
-tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
-```
+<!-- tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**")) -->
+<!-- ``` -->
 
 <!-- ## MV Cox model w/ CH+HIV -->
 <!-- ```{r cox} -->
@@ -354,7 +354,7 @@ tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable*
 <!--   cox.zph() -->
 <!-- ``` -->
 
-## 2.MV Cox model w/ CH+HIV+age
+## 1.MV Cox model w/ CH+HIV+age
 ```{r}
 tbl1 <- CH_HIV_data %>%
   select(CH_status,
@@ -376,31 +376,6 @@ tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable*
 ```
 <br>
 <br>
-
-<!-- # Startified Survival by HIV/CH -->
-<!-- ```{r} -->
-<!-- ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,  -->
-<!--                    data=CH_HIV_data), -->
-<!--            title = "OS Analysis", -->
-<!--            font.main = c(20, "bold", "black"), -->
-<!--            font.x = c(18, "bold", "black"), -->
-<!--            font.y = c(18, "bold", "black"), -->
-<!--            font.legend = c(16, "black"), -->
-<!--            font.tickslab = c(16, "bold", "black"), -->
-<!--            size = 1.5, -->
-
-<!--            xlab = "Time in months", -->
-<!--            legend = "top", -->
-<!--            legend.title = "", -->
-<!--            color = "hiv_status", -->
-<!--            linetype = "CH_status", -->
-<!--            pval = TRUE, -->
-<!--            conf.int = FALSE, -->
-<!--            # Censor -->
-<!--            censor = TRUE -->
-<!-- ) + guides(colour = guide_legend(ncol = 1), -->
-<!--            linetype = guide_legend(ncol = 1)) -->
-<!-- ``` -->
 
 <!-- ## In HIV + population -->
 <!-- ```{r} -->
@@ -494,7 +469,7 @@ tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable*
 <!-- tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**")) -->
 <!-- ``` -->
 
-## 3.Survival curve
+## 2.Survival curve
 ```{r}
 ggsurvplot(survfit(Surv(month_at_os, os_event) ~ CH_status, 
                    data=CH_HIV_data),
@@ -541,6 +516,32 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
 ) + guides(colour = guide_legend(ncol = 1))
 ```
 
+## 3.Survival by HIV/CH
+```{r}
+ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
+                   data=CH_HIV_data),
+           title = "OS Analysis",
+           font.main = c(20, "bold", "black"),
+           font.x = c(18, "bold", "black"),
+           font.y = c(18, "bold", "black"),
+           font.legend = c(16, "black"),
+           font.tickslab = c(16, "bold", "black"),
+           size = 1.5,
+
+           xlab = "Time in months",
+           legend = "top",
+           legend.title = "",
+           color = "hiv_status",
+           palette = c("darkgrey", "purple"),
+           linetype = "CH_status",
+           pval = TRUE,
+           conf.int = FALSE,
+           # Censor
+           censor = TRUE
+) + guides(colour = guide_legend(ncol = 1),
+           linetype = guide_legend(ncol = 1))
+```
+
 # Logistic regression
 ```{r}
 # glm(CH_status ~
@@ -583,13 +584,13 @@ glm(CH_status ~
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
 
-glm(CH_status ~
-      hiv_status + age_at_diagnosis_corrected + grim_age_accel + tnsc_accel + pheno_age_accel + dunedin_pace,
-    family = "binomial",
-    data = CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# glm(CH_status ~
+#       hiv_status + age_at_diagnosis_corrected + grim_age_accel + tnsc_accel + pheno_age_accel + dunedin_pace,
+#     family = "binomial",
+#     data = CH_HIV_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status")
 
 glm(CH_status ~
       hiv_status + horvath18,
@@ -607,13 +608,13 @@ glm(CH_status ~
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
 
-glm(CH_status ~
-      hiv_status + horvath18 + horvath13,
-    family = "binomial",
-    data = CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# glm(CH_status ~
+#       hiv_status + horvath18 + horvath13,
+#     family = "binomial",
+#     data = CH_HIV_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status")
 ```
 
 
