@@ -617,6 +617,23 @@ glm(CH_status ~
 #   modify_spanning_header(everything() ~ "CH status")
 ```
 
+```{r}
+lung_data <- CH_HIV_data %>% 
+   filter(new_primary_site == "Lung")
+print("table smoking vs CH")
+table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$CH_status)
+
+print("table smoking vs HIV")
+table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$hiv_status)
+
+glm(CH_status ~
+      hiv_status + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+    family = "binomial",
+    data = lung_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
 
 
 

@@ -111,7 +111,7 @@ smoking <- smoking_CR %>%
                   )) %>% 
   mutate(across(-c("MRN", "PATIENT_ID"), ~factor(., levels = c("Never", "Ever"))))
 
-# 9351025, 11051777
+
 
 
 CH_HIV_data <- 
