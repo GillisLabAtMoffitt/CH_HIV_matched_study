@@ -635,7 +635,61 @@ glm(CH_status ~
   modify_spanning_header(everything() ~ "CH status")
 ```
 
+# Logistic regression model: CH outcome, model to include HIV, race, sex, and smoking status only.
+```{r}
+glm(CH_status ~
+      hiv_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
 
+# Cox PH regression model: Survival outcome, model to include CH, race, sex, and smoking status only. Let’s do both overall and only among HIV+ patients.
+```{r}
+tbl1 <- CH_HIV_data %>%
+  select(CH_status,
+         new_race, sex,
+         DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
+  tbl_uvregression(method = survival::coxph,
+                   y = (Surv(time = CH_HIV_data$month_at_os,
+                             event = CH_HIV_data$os_event)),
+                   exponentiate = TRUE) %>%
+  bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>%
+  bold_labels() %>% italicize_levels()
+tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os,
+             event = CH_HIV_data$os_event) ~
+               CH_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+             data =  CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  modify_caption("**Overall population**")
 
+tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
+```
 
+```{r}
+HIV_pos <- CH_HIV_data %>%
+  filter(hiv_status == "positive")
+
+tbl1 <- HIV_pos %>%
+  select(CH_status,
+         new_race, sex,
+         DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
+  tbl_uvregression(method = survival::coxph,
+                   y = (Surv(time = HIV_pos$month_at_os,
+                             event = HIV_pos$os_event)),
+                   exponentiate = TRUE) %>%
+  bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>%
+  bold_labels() %>% italicize_levels() %>% 
+  modify_header(label = "**Cox PH HIV+**")
+tbl2 <- coxph(Surv(time = HIV_pos$month_at_os,
+             event = HIV_pos$os_event) ~
+               CH_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+             data =  HIV_pos) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  modify_caption("**HIV+**")
+
+tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
+```
 
