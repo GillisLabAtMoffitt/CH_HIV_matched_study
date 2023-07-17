@@ -646,6 +646,54 @@ glm(CH_status ~
   modify_spanning_header(everything() ~ "CH status")
 ```
 
+# Logistic regression model: CH outcome, model to include HIV, age, race, sex, and smoking status only.
+```{r}
+glm(CH_status ~
+      hiv_status + age_at_diagnosis_corrected + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
+
+# Logistic regression model: CH outcome, model to include HIV, age, race, sex, smoking status, horvath13.
+```{r}
+glm(CH_status ~
+      hiv_status + age_at_diagnosis_corrected + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + horvath13,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
+
+# Logistic regression model: CH outcome, model to include HIV, age, race, sex, smoking status, pheno_age_accel.
+```{r}
+glm(CH_status ~
+      hiv_status + age_at_diagnosis_corrected + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + pheno_age_accel,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
+
+# Logistic regression model: CH outcome, model to include HIV, age, race, sex, smoking status, dunedin_pace.
+```{r}
+glm(CH_status ~
+      hiv_status + age_at_diagnosis_corrected + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + dunedin_pace,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+```
+
 # Cox PH regression model: Survival outcome, model to include CH, race, sex, and smoking status only. Let’s do both overall and only among HIV+ patients.
 ```{r}
 tbl1 <- CH_HIV_data %>%
