@@ -123,7 +123,7 @@ CH_HIV_data %>%
   pivot_longer(cols = -hiv_status) %>%
   ggplot(aes(x= hiv_status, y= value, color= hiv_status))+
   geom_boxplot()+
-  scale_color_manual(values = c("darkgrey", "purple"))+
+  scale_color_manual(values = c("#CDB0EE", "#000080"))+
   facet_wrap(.~ name, scales = "free", ncol = 3)+
   theme(axis.title.y = element_blank())+
   stat_compare_means()
@@ -525,7 +525,7 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
            legend = "top",
            legend.title = "HIV status",
            legend.labs = c("negative", "positive"),
-           palette = c("darkgrey", "purple"),
+           palette = c("#CDB0EE", "#000080"),
            pval = TRUE,
            conf.int = FALSE,
            # Censor
@@ -549,7 +549,7 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
            legend = "top",
            legend.title = "",
            color = "hiv_status",
-           palette = c("darkgrey", "purple"),
+           palette = c("#CDB0EE", "#000080"),
            linetype = "CH_status",
            pval = TRUE,
            conf.int = FALSE,
