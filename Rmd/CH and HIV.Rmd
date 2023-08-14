@@ -538,11 +538,11 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
 ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
                    data=CH_HIV_data),
            title = "OS Analysis",
-           font.main = c(20, "bold", "black"),
-           font.x = c(18, "bold", "black"),
-           font.y = c(18, "bold", "black"),
+           font.main = c(20, "black"),
+           font.x = c(18, "black"),
+           font.y = c(18, "black"),
            font.legend = c(16, "black"),
-           font.tickslab = c(16, "bold", "black"),
+           font.tickslab = c(16, "black"),
            size = 1.5,
 
            xlab = "Time in months",
@@ -682,6 +682,13 @@ glm(CH_status ~
   tbl_regression(exponentiate = TRUE,
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
+
+#calculate McFadden's R-squared for model
+model <- glm(CH_status ~
+      hiv_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+    family = "binomial",
+    data = CH_HIV_data)
+with(summary(model), 1 - deviance/null.deviance)
 ```
 
 # Logistic regression model: CH outcome, model to include HIV, race, sex, smoking status, horvath13.
