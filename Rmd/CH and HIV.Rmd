@@ -65,9 +65,18 @@ CH_HIV_data <- CH_HIV_data %>%
   mutate(z_horvath13 = (horvath13 - mean(horvath13, na.rm = TRUE) ) /
                           sd(horvath13, na.rm = TRUE)
          ) %>% 
+  mutate(z_horvath13_accel = (horvath13_acce - mean(horvath13_acce, na.rm = TRUE) ) /
+                          sd(horvath13_acce, na.rm = TRUE)
+         ) %>% 
+  # mutate(z_horvath18_accel = (horvath18_accel - mean(horvath18_accel, na.rm = TRUE) ) /
+  #                         sd(horvath18_accel, na.rm = TRUE)
+  #        ) %>% 
   mutate(z_dunedin_pace = (dunedin_pace - mean(dunedin_pace, na.rm = TRUE) ) /
                           sd(dunedin_pace, na.rm = TRUE)
-         )
+         ) #%>% 
+  # mutate(z_pheno_age_accel = (pheno_age_accel - mean(pheno_age_accel, na.rm = TRUE) ) /
+  #                         sd(pheno_age_accel, na.rm = TRUE)
+  #        )
 write_csv(CH_HIV_data, "final_CH_HIV_data.csv")
 ```
 
@@ -76,9 +85,9 @@ write_csv(CH_HIV_data, "final_CH_HIV_data.csv")
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
          hiv_status, CH_status,
-         starts_with("grim"), starts_with("tnsc"),
+         starts_with("grim"), # starts_with("tnsc"),
          starts_with("horvath"),
-         starts_with("pheno_"),
+         # starts_with("pheno_"),
          starts_with("dunedin"),
          starts_with("z_"),
          new_race, new_ethnicity, sex, 
@@ -98,9 +107,9 @@ CH_HIV_data %>%
 ```{r plot clocks, fig.height=14, fig.width=12}
 CH_HIV_data %>%
   select(CH_status,
-         starts_with("grim"), starts_with("tnsc"),
+         starts_with("grim"), # starts_with("tnsc"),
          starts_with("horvath"),
-         starts_with("pheno_"),
+         # starts_with("pheno_"),
          starts_with("dunedin"),
          starts_with("z_")) %>%
   filter(!is.na(CH_status)) %>%
@@ -114,9 +123,9 @@ CH_HIV_data %>%
 
 CH_HIV_data %>%
   select(hiv_status,
-         starts_with("grim"), starts_with("tnsc"),
+         starts_with("grim"), # starts_with("tnsc"),
          starts_with("horvath"),
-         starts_with("pheno_"),
+         # starts_with("pheno_"),
          starts_with("dunedin"),
          starts_with("z_")) %>%
   filter(!is.na(hiv_status)) %>%
@@ -134,9 +143,9 @@ CH_HIV_data %>%
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
          hiv_status, CH_status,
-         starts_with("grim"), starts_with("tnsc"),
+         starts_with("grim"), # starts_with("tnsc"),
          starts_with("horvath"),
-         starts_with("pheno_"),
+         # starts_with("pheno_"),
          starts_with("dunedin"),
          starts_with("z_"),
          new_race, new_ethnicity, sex, 
@@ -148,6 +157,14 @@ CH_HIV_data %>%
          new_primary_site,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC
          ) %>% 
+  mutate(new_tx_summary = case_when(
+    new_tx_summary == "None" |
+      new_tx_summary == "Surgery"             ~ "None",
+    new_tx_summary == "CHEM/Rad/Surgery"      ~ "CHEM/Rad",
+    new_tx_summary == "CHEM/Surgery"          ~ "CHEM",
+    new_tx_summary == "Rad/Surgery"           ~ "Rad",
+    TRUE                                      ~ new_tx_summary
+  )) %>% 
   tbl_summary(by = CH_status) %>% 
   bold_labels() %>% 
   add_p() %>% bold_p(t=.05) %>% add_overall()
@@ -250,9 +267,9 @@ tbl_merge(list(tbl1, tbl2, tbl3, tbl4, tbl5, tbl6, tbl7),
 CH_HIV_data %>% 
   select(age_at_diagnosis_corrected, age_at_specimen,
          hiv_status, CH_status,
-         starts_with("grim"), starts_with("tnsc"),
+         starts_with("grim"), # starts_with("tnsc"),
          starts_with("horvath"),
-         starts_with("pheno_"),
+         # starts_with("pheno_"),
          starts_with("dunedin"),
          starts_with("z_"),
          new_race, new_ethnicity, sex, 
@@ -264,6 +281,14 @@ CH_HIV_data %>%
          new_primary_site,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC
          ) %>% 
+  mutate(new_tx_summary = case_when(
+    new_tx_summary == "None" |
+      new_tx_summary == "Surgery"             ~ "None",
+    new_tx_summary == "CHEM/Rad/Surgery"      ~ "CHEM/Rad",
+    new_tx_summary == "CHEM/Surgery"          ~ "CHEM",
+    new_tx_summary == "Rad/Surgery"           ~ "Rad",
+    TRUE                                      ~ new_tx_summary
+  )) %>% 
   tbl_summary(by = hiv_status) %>% 
   bold_labels() %>% 
   add_p() %>% bold_p(t=.05) %>% add_overall()
@@ -508,6 +533,17 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ CH_status,
            # Censor
            censor = TRUE
 ) + guides(colour = guide_legend(ncol = 1))
+
+model <- survfit(Surv(month_at_os, os_event) ~ CH_status, 
+                   data=CH_HIV_data)
+print("median survival")
+surv_median(model)
+print("1 year survival")
+summary(model, times = 12)
+print("3 year survival")
+summary(model, times = 36)
+print("5 year survival")
+summary(model, times = 60)
 ```
 
 ```{r}
@@ -531,6 +567,17 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status,
            # Censor
            censor = TRUE
 ) + guides(colour = guide_legend(ncol = 1))
+
+model <- survfit(Surv(month_at_os, os_event) ~ hiv_status, 
+                   data=CH_HIV_data)
+print("median survival")
+surv_median(model)
+print("1 year survival")
+summary(model, times = 12)
+print("3 year survival")
+summary(model, times = 36)
+print("5 year survival")
+summary(model, times = 60)
 ```
 
 ## 3.Survival by HIV/CH
@@ -557,6 +604,16 @@ ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
            censor = TRUE
 ) + guides(colour = guide_legend(ncol = 1),
            linetype = guide_legend(ncol = 1))
+model <- survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
+                   data=CH_HIV_data)
+print("median survival")
+surv_median(model)
+print("1 year survival")
+summary(model, times = 12)
+print("3 year survival")
+summary(model, times = 36)
+print("5 year survival")
+summary(model, times = 60)
 ```
 
 # Logistic regression
@@ -584,21 +641,21 @@ glm(CH_status ~
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
 
-glm(CH_status ~
-      hiv_status + age_at_diagnosis_corrected + tnsc_accel,
-    family = "binomial",
-    data = CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# glm(CH_status ~
+#       hiv_status + age_at_diagnosis_corrected + tnsc_accel,
+#     family = "binomial",
+#     data = CH_HIV_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status")
 
-glm(CH_status ~
-      hiv_status + age_at_diagnosis_corrected + pheno_age_accel,
-    family = "binomial",
-    data = CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# glm(CH_status ~
+#       hiv_status + age_at_diagnosis_corrected + pheno_age_accel,
+#     family = "binomial",
+#     data = CH_HIV_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status")
 
 glm(CH_status ~
       hiv_status + age_at_diagnosis_corrected + dunedin_pace,
@@ -623,13 +680,13 @@ glm(CH_status ~
 #                  intercept = TRUE) %>%
 #   modify_spanning_header(everything() ~ "CH status")
 
-glm(CH_status ~
-      hiv_status + horvath18,
-    family = "binomial",
-    data = CH_HIV_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# glm(CH_status ~
+#       hiv_status + horvath18,
+#     family = "binomial",
+#     data = CH_HIV_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status")
 
 glm(CH_status ~
       hiv_status + horvath13,
@@ -646,6 +703,14 @@ glm(CH_status ~
   tbl_regression(exponentiate = TRUE,
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
+
+glm(CH_status ~
+      hiv_status + z_horvath13_accel,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
 # glm(CH_status ~
 #       hiv_status + horvath18 + horvath13,
 #     family = "binomial",
@@ -656,21 +721,21 @@ glm(CH_status ~
 ```
 
 ```{r}
-lung_data <- CH_HIV_data %>% 
-   filter(new_primary_site == "Lung")
-print("table smoking vs CH")
-table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$CH_status)
-
-print("table smoking vs HIV")
-table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$hiv_status)
-
-glm(CH_status ~
-      hiv_status + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
-    family = "binomial",
-    data = lung_data) %>%
-  tbl_regression(exponentiate = TRUE,
-                 intercept = TRUE) %>%
-  modify_spanning_header(everything() ~ "CH status")
+# lung_data <- CH_HIV_data %>% 
+#    filter(new_primary_site == "Lung")
+# print("table smoking vs CH")
+# table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$CH_status)
+# 
+# print("table smoking vs HIV")
+# table(lung_data$DERIVED_TOBACCO_SMOKING_STATUS_DESC, lung_data$hiv_status)
+# 
+# glm(CH_status ~
+#       hiv_status + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+#     family = "binomial",
+#     data = lung_data) %>%
+#   tbl_regression(exponentiate = TRUE,
+#                  intercept = TRUE) %>%
+#   modify_spanning_header(everything() ~ "CH status Lung data")
 ```
 
 # Logistic regression model: CH outcome, model to include HIV, race, sex, and smoking status only.
@@ -689,6 +754,14 @@ model <- glm(CH_status ~
     family = "binomial",
     data = CH_HIV_data)
 with(summary(model), 1 - deviance/null.deviance)
+
+glm(CH_status ~
+      hiv_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + age_at_diagnosis_corrected,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
 ```
 
 # Logistic regression model: CH outcome, model to include HIV, race, sex, smoking status, horvath13.
@@ -704,6 +777,22 @@ glm(CH_status ~
 glm(CH_status ~
       hiv_status + 
       new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_horvath13,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+glm(CH_status ~
+      hiv_status + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_horvath13_accel,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+glm(CH_status ~
+      hiv_status + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_horvath13_accel + age_at_diagnosis_corrected,
     family = "binomial",
     data = CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE,
@@ -729,6 +818,14 @@ glm(CH_status ~
   tbl_regression(exponentiate = TRUE,
                  intercept = TRUE) %>%
   modify_spanning_header(everything() ~ "CH status")
+glm(CH_status ~
+      hiv_status + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_grim_age_accel + age_at_diagnosis_corrected,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
 ```
 
 # Logistic regression model: CH outcome, model to include HIV, race, sex, smoking status, dunedin_pace.
@@ -744,6 +841,14 @@ glm(CH_status ~
 glm(CH_status ~
       hiv_status + 
       new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_dunedin_pace,
+    family = "binomial",
+    data = CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE,
+                 intercept = TRUE) %>%
+  modify_spanning_header(everything() ~ "CH status")
+glm(CH_status ~
+      hiv_status + 
+      new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + z_dunedin_pace + age_at_diagnosis_corrected,
     family = "binomial",
     data = CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE,

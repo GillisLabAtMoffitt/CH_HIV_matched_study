@@ -112,7 +112,9 @@ smoking <- smoking_CR %>%
   mutate(across(-c("MRN", "PATIENT_ID"), ~factor(., levels = c("Never", "Ever"))))
 
 
-
+data_change <- read_csv(paste0(here::here(), "/id_to_change_data_tx.csv"))
+data_change2 <- read_csv(paste0(here::here(), "/id_to_change_data_tx_after.csv"))
+data_change3 <- read_csv(paste0(here::here(), "/id_to_change_data_date.csv"))
 
 CH_HIV_data <- 
   bind_rows(clinical_data_A, clinical_data_B, clinical_data_C) %>% 
@@ -138,6 +140,16 @@ CH_HIV_data <-
   left_join(., smoking,
             by= "MRN") %>% 
   mutate(sex = factor(sex, levels= c("MALE", "FEMALE"))) %>% 
+  mutate(treatment_status = case_when(
+    MRN == data_change$id_change_data      ~ "before",
+    MRN == data_change2$id_change_data     ~ "after start",
+    TRUE                                   ~ treatment_status
+  )) %>% 
+  mutate(treatment_date = case_when(
+    MRN == data_change3$id_change_data     ~ "2019-05-21",
+    TRUE                                   ~ treatment_date
+  )) %>% 
+
   mutate(treatment_status = factor(treatment_status, levels = c("before", "after start"))) %>% 
   mutate(os_event = case_when(
     vital_status == 1               ~ 0,
