@@ -859,7 +859,7 @@ glm(CH_status ~
 # Cox PH regression model: Survival outcome, model to include CH, race, sex, and smoking status only. Let’s do both overall and only among HIV+ patients.
 ```{r}
 tbl1 <- CH_HIV_data %>%
-  select(CH_status,
+  select(CH_status,age_at_diagnosis_corrected, 
          new_race, sex,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
   tbl_uvregression(method = survival::coxph,
@@ -870,7 +870,7 @@ tbl1 <- CH_HIV_data %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os,
              event = CH_HIV_data$os_event) ~
-               CH_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
              data =  CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
   modify_caption("**Overall population**")
@@ -883,7 +883,7 @@ HIV_pos <- CH_HIV_data %>%
   filter(hiv_status == "positive")
 
 tbl1 <- HIV_pos %>%
-  select(CH_status,
+  select(CH_status,age_at_diagnosis_corrected,
          new_race, sex,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
   tbl_uvregression(method = survival::coxph,
@@ -895,7 +895,7 @@ tbl1 <- HIV_pos %>%
   modify_header(label = "**Cox PH HIV+**")
 tbl2 <- coxph(Surv(time = HIV_pos$month_at_os,
              event = HIV_pos$os_event) ~
-               CH_status + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
              data =  HIV_pos) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
   modify_caption("**HIV+**")
