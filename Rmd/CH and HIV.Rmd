@@ -50,7 +50,7 @@ theme_gtsummary_compact()
 
 ```{r}
 CH_HIV_data <- 
-  read_rds(paste0(here::here(), "/CH_HIV_data_full.rds")) %>% 
+  read_rds(paste0(here::here(), "/CH_HIV_data_full_03112024.rds")) %>% 
   group_by(MRN) %>% 
   mutate(n = n(), .before = MRN) %>% 
   ungroup() %>% 
@@ -96,7 +96,7 @@ CH_HIV_data %>%
          treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         new_primary_site,
+         new_primary_site, primary_site,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC
          ) %>% 
   
@@ -105,37 +105,37 @@ CH_HIV_data %>%
 ```
 
 ```{r plot clocks, fig.height=14, fig.width=12}
-CH_HIV_data %>%
-  select(CH_status,
-         starts_with("grim"), # starts_with("tnsc"),
-         starts_with("horvath"),
-         # starts_with("pheno_"),
-         starts_with("dunedin"),
-         starts_with("z_")) %>%
-  filter(!is.na(CH_status)) %>%
-  pivot_longer(cols = -CH_status) %>%
-  ggplot(aes(x= CH_status, y= value, color= CH_status))+
-  geom_boxplot()+
-  scale_color_manual(values = c("blue", "red"))+
-  facet_wrap(.~ name, scales = "free", ncol = 3)+
-  theme(axis.title.y = element_blank())+
-  stat_compare_means()
-
-CH_HIV_data %>%
-  select(hiv_status,
-         starts_with("grim"), # starts_with("tnsc"),
-         starts_with("horvath"),
-         # starts_with("pheno_"),
-         starts_with("dunedin"),
-         starts_with("z_")) %>%
-  filter(!is.na(hiv_status)) %>%
-  pivot_longer(cols = -hiv_status) %>%
-  ggplot(aes(x= hiv_status, y= value, color= hiv_status))+
-  geom_boxplot()+
-  scale_color_manual(values = c("#CDB0EE", "#000080"))+
-  facet_wrap(.~ name, scales = "free", ncol = 3)+
-  theme(axis.title.y = element_blank())+
-  stat_compare_means()
+# CH_HIV_data %>%
+#   select(CH_status,
+#          starts_with("grim"), # starts_with("tnsc"),
+#          starts_with("horvath"),
+#          # starts_with("pheno_"),
+#          starts_with("dunedin"),
+#          starts_with("z_")) %>%
+#   filter(!is.na(CH_status)) %>%
+#   pivot_longer(cols = -CH_status) %>%
+#   ggplot(aes(x= CH_status, y= value, color= CH_status))+
+#   geom_boxplot()+
+#   scale_color_manual(values = c("blue", "red"))+
+#   facet_wrap(.~ name, scales = "free", ncol = 3)+
+#   theme(axis.title.y = element_blank())+
+#   stat_compare_means()
+# 
+# CH_HIV_data %>%
+#   select(hiv_status,
+#          starts_with("grim"), # starts_with("tnsc"),
+#          starts_with("horvath"),
+#          # starts_with("pheno_"),
+#          starts_with("dunedin"),
+#          starts_with("z_")) %>%
+#   filter(!is.na(hiv_status)) %>%
+#   pivot_longer(cols = -hiv_status) %>%
+#   ggplot(aes(x= hiv_status, y= value, color= hiv_status))+
+#   geom_boxplot()+
+#   scale_color_manual(values = c("#CDB0EE", "#000080"))+
+#   facet_wrap(.~ name, scales = "free", ncol = 3)+
+#   theme(axis.title.y = element_blank())+
+#   stat_compare_means()
 ```
 
 # Table 2 - Clinical by CH
@@ -154,7 +154,7 @@ CH_HIV_data %>%
          treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         new_primary_site,
+         new_primary_site, primary_site,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC
          ) %>% 
   mutate(new_tx_summary = case_when(
@@ -278,7 +278,7 @@ CH_HIV_data %>%
          treatment_status,
          specimen_to_surgery_lag,
          specimen_to_treatment_lag, specimen_tx_lag,
-         new_primary_site,
+         new_primary_site, primary_site,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC
          ) %>% 
   mutate(new_tx_summary = case_when(
@@ -935,4 +935,122 @@ tbl2 <- coxph(Surv(time = HIV_pos$month_at_os,
 
 tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
 ```
+
+# KM restricted to only patients who had sample collected before treatment start
+```{r, fig.height=6}
+restricted_dat <- CH_HIV_data %>% 
+  filter(treatment_status == "before")
+
+ggsurvplot(survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
+                   data=restricted_dat),
+           title = "OS Analysis",
+           font.main = c(20, "black"),
+           font.x = c(18, "black"),
+           font.y = c(18, "black"),
+           font.legend = c(16, "black"),
+           font.tickslab = c(16, "black"),
+           size = 1.5,
+
+           xlab = "Time in months",
+           legend = "top",
+           legend.title = "",
+           color = "hiv_status",
+           palette = c("#CDB0EE", "#000080"),
+           linetype = "CH_status",
+           pval = TRUE,
+           conf.int = FALSE,
+           # Censor
+           censor = TRUE,
+           risk.table.title = "Risk table (Cumulative number of events)",
+           risk.table = "nrisk_cumevents",
+           # cumevents = TRUE,
+           risk.table.y.text = FALSE,
+           # cumevents.y.text = FALSE,
+           risk.table.fontsize = 4,
+           tables.theme = theme_survminer(base_size = 5,
+                                          font.main = c(16, "bold", "black"),
+                                          font.x = c(16, "bold", "black"),
+                                          font.y = c(16, "bold", "transparent"),
+                                          font.tickslab = c(19, "bold", "black"))
+) + guides(colour = guide_legend(ncol = 1),
+           linetype = guide_legend(ncol = 1))
+# model <- survfit(Surv(month_at_os, os_event) ~ hiv_status + CH_status,
+#                    data=CH_HIV_data)
+# print("median survival")
+# surv_median(model)
+# print("1 year survival")
+# summary(model, times = 12)
+# print("3 year survival")
+# summary(model, times = 36)
+# print("5 year survival")
+# summary(model, times = 60)
+```
+
+# Response to reviewers.
+
+5-yr survival proportions in CH negative population by HIV status
+```{r}
+surv_CHno_5years <- CH_HIV_data %>% 
+  filter(CH_status == "NO")
+model <- survfit(Surv(month_at_os, os_event) ~ hiv_status, 
+                   data=surv_CHno_5years)
+print("5 year survival")
+summary(model, times = 60)
+```
+
+5-yr survival proportions in HIV negative population by CH status
+```{r}
+surv_HIVnegative_5years <- CH_HIV_data %>% 
+  filter(hiv_status == "negative")
+model <- survfit(Surv(month_at_os, os_event) ~ CH_status, 
+                   data=surv_HIVnegative_5years)
+print("5 year survival")
+summary(model, times = 60)
+```
+
+
+
+HRs for a model adjusting for CH and HIV in overall population with an additional test for an interaction between CH and HIV
+```{r}
+coxph(Surv(time = CH_HIV_data$month_at_os,
+             event = CH_HIV_data$os_event) ~
+               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC +
+        CH_status * hiv_status,
+             data =  CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  modify_caption("**Overall population**")
+
+coxph(Surv(time = CH_HIV_data$month_at_os,
+             event = CH_HIV_data$os_event) ~
+               CH_status + hiv_status + CH_status * hiv_status,
+             data =  CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  bold_labels() %>% 
+  add_nevent(location = "level") %>% add_n(location = "level")
+```
+
+
+Test for an interaction between CH and smoking
+```{r}
+coxph(Surv(time = CH_HIV_data$month_at_os,
+             event = CH_HIV_data$os_event) ~
+               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC + 
+        CH_status * DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+             data =  CH_HIV_data) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  bold_labels() %>% 
+  add_nevent(location = "level") %>% add_n(location = "level")
+```
+
+
+
+
+
+
+
+
+
+
+
+
 

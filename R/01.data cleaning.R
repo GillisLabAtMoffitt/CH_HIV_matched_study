@@ -177,6 +177,35 @@ CH_HIV_data <-
     str_detect(tnm_stage, "1|2")    ~ "I-II",
     str_detect(tnm_stage, "3|4")    ~ "III-IV"
   )) %>% 
+  mutate(tnm_stage = case_when(
+    tnm_stage == "99 UNK"           ~ NA_character_,
+    str_detect(tnm_stage, "1")      ~ "I",
+    str_detect(tnm_stage, "2")      ~ "II",
+    str_detect(tnm_stage, "3")      ~ "III",
+    str_detect(tnm_stage, "4")      ~ "IV"
+  )) %>% 
+  mutate(primary_site = case_when(
+    str_detect(primary_site, "TONGUE")                   ~ "Tongue",
+    str_detect(primary_site, "CHEEK MUCOSA")             ~ "Mouth",
+    str_detect(primary_site, "INTRAHEPATIC BILE DUC")    ~ "Liver",
+    str_detect(primary_site, "ESOPHAGUS")                ~ "Esophagus",
+    
+    str_detect(primary_site, "GASTRIC")                  ~ "Stomach",
+    str_detect(primary_site, "STOMACH")                  ~ "Stomach",
+    str_detect(primary_site, "DUODENUM")                 ~ "Stomach",
+    
+    str_detect(primary_site, "COLON")                    ~ "Colorectal",
+    str_detect(primary_site, "APPENDIX")                 ~ "Colorectal",
+    str_detect(primary_site, "RECTUM")                   ~ "Colorectal",
+    str_detect(primary_site, "ANUS")                     ~ "Colorectal",
+    str_detect(primary_site, "ANAL")                     ~ "Colorectal",
+    
+    str_detect(primary_site, "PANCREAS")                 ~ "Pancreas",
+    str_detect(primary_site, "LUNG")                     ~ "Lung",
+    str_detect(primary_site, "SKIN")                     ~ "Skin",
+    str_detect(primary_site, "BREAST")                   ~ "Breast",
+    TRUE                                                 ~ primary_site
+  )) %>% 
   mutate(CH_status = factor(CH_status, levels = c("NO", "CH")))
   
 # ################################################################################# III ### Merge data
@@ -194,7 +223,7 @@ CH_HIV_data <-
 
 
 
-write_rds(CH_HIV_data, "CH_HIV_data_full.rds")
-write_csv(CH_HIV_data, "CH_HIV_data.csv")
+write_rds(CH_HIV_data, "CH_HIV_data_full_03112024.rds")
+write_csv(CH_HIV_data, "CH_HIV_data_03112024.csv")
 
 # End cleaning
