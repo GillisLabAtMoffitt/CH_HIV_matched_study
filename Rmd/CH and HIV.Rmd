@@ -50,7 +50,7 @@ theme_gtsummary_compact()
 
 ```{r}
 CH_HIV_data <- 
-  read_rds(paste0(here::here(), "/CH_HIV_data_full_03112024.rds")) %>% 
+  read_rds(paste0(here::here(), "/CH_HIV_data_full_03202024.rds")) %>% 
   group_by(MRN) %>% 
   mutate(n = n(), .before = MRN) %>% 
   ungroup() %>% 

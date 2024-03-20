@@ -198,7 +198,7 @@ CH_HIV_data <-
     str_detect(primary_site, "APPENDIX")                 ~ "Colorectal",
     str_detect(primary_site, "RECTUM")                   ~ "Colorectal",
     str_detect(primary_site, "ANUS")                     ~ "Colorectal",
-    str_detect(primary_site, "ANAL")                     ~ "Colorectal",
+    str_detect(primary_site, "ANAL")                     ~ "Anal",
     
     str_detect(primary_site, "PANCREAS")                 ~ "Pancreas",
     str_detect(primary_site, "LUNG")                     ~ "Lung",
@@ -223,7 +223,7 @@ CH_HIV_data <-
 
 
 
-write_rds(CH_HIV_data, "CH_HIV_data_full_03112024.rds")
-write_csv(CH_HIV_data, "CH_HIV_data_03112024.csv")
+write_rds(CH_HIV_data, "CH_HIV_data_full_03202024.rds")
+write_csv(CH_HIV_data, "CH_HIV_data_03202024.csv")
 
 # End cleaning
