@@ -893,6 +893,7 @@ glm(CH_status ~
 ```{r}
 tbl1 <- CH_HIV_data %>%
   select(CH_status,age_at_diagnosis_corrected, 
+         hiv_status,
          new_race, sex,
          DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
   tbl_uvregression(method = survival::coxph,
@@ -903,7 +904,8 @@ tbl1 <- CH_HIV_data %>%
   bold_labels() %>% italicize_levels()
 tbl2 <- coxph(Surv(time = CH_HIV_data$month_at_os,
              event = CH_HIV_data$os_event) ~
-               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+               CH_status + hiv_status + age_at_diagnosis_corrected + new_race + 
+               sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
              data =  CH_HIV_data) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
   modify_caption("**Overall population**")
@@ -932,6 +934,31 @@ tbl2 <- coxph(Surv(time = HIV_pos$month_at_os,
              data =  HIV_pos) %>%
   tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
   modify_caption("**HIV+**")
+
+tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
+```
+
+```{r}
+HIV_neg <- CH_HIV_data %>%
+  filter(hiv_status == "negative")
+
+tbl1 <- HIV_neg %>%
+  select(CH_status,age_at_diagnosis_corrected,
+         new_race, sex,
+         DERIVED_TOBACCO_SMOKING_STATUS_DESC) %>%
+  tbl_uvregression(method = survival::coxph,
+                   y = (Surv(time = HIV_neg$month_at_os,
+                             event = HIV_neg$os_event)),
+                   exponentiate = TRUE) %>%
+  bold_p(t = .05) %>% add_nevent(location = "level") %>% add_n(location = "level") %>%
+  bold_labels() %>% italicize_levels() %>% 
+  modify_header(label = "**Cox PH HIV-**")
+tbl2 <- coxph(Surv(time = HIV_neg$month_at_os,
+             event = HIV_neg$os_event) ~
+               CH_status + age_at_diagnosis_corrected + new_race + sex + DERIVED_TOBACCO_SMOKING_STATUS_DESC,
+             data =  HIV_neg) %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p(t = .05) %>%
+  modify_caption("**HIV-**")
 
 tbl_merge(list(tbl1, tbl2), tab_spanner = c("**Univariable**", "**Multivariable**"))
 ```
