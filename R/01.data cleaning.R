@@ -4,47 +4,56 @@ library(lubridate)
 
 
 ################################################################################# I ### Load data
-path <- fs::path("", "Volumes", "Gillis_Research","Christelle Colin-Leitzinger", "CH and HIV")
+path <- fs::path("", "Volumes", "Gillis_Research","Lab_Data", "CHHIVmethylationClock")
 
-id_to_remove <- read_csv(paste0(here::here(), "/id_to_remove_from_analysis.csv"))
+id_to_remove <- read_csv(paste0(path, "/ProcessedData",
+                                "/CHHIVmethylationClock_id_to_remove_from_analysis.csv"))
                          
 clinical_data <- 
   # readxl::read_xlsx(paste0(here::here(), "/Sample_Sheet_withEpiAge_20230316.xlsx")#, # For full data
   # readxl::read_xlsx(paste0(here::here(), "/hiv_data.xlsx")#, # For short data
-  readxl::read_xlsx(paste0(here::here(), "/allSample_wClocks_M4Madded_20230509.xlsx")#, # For new clocks
+  readxl::read_xlsx(paste0(path, "/RawData",
+                           "/CHHIVmethylationClock_allSample_wClocks_M4Madded_20230509.xlsx")#, # For new clocks
                     ) %>% 
   janitor::clean_names() %>% 
   filter(study_id != id_to_remove$id_to_remove | is.na(study_id))
 
 dictionary <- 
-  readxl::read_xlsx(paste0(here::here(), "/Table 1_new variables-modified04.04.23.xlsx"),
+  readxl::read_xlsx(paste0(path, "/RawData",
+                                  "/CHHIVmethylationClock_Table 1_new variables-modified04.04.23.xlsx"),
                     sheet = "new variables-modified"
   )
 
-smoking_CR <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+smoking_CR <- readxl::read_xlsx(paste0(path, "/RawData",
+                                       "/CHHIVmethylationClock_HIVreport_for_smoking.xlsx"),
                              sheet = "Smoking_from_CR"
 )
-smoking_CERNER <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+smoking_CERNER <- readxl::read_xlsx(paste0(path, "/RawData",
+                                           "/CHHIVmethylationClock_HIVreport_for_smoking.xlsx"),
                                 sheet = "Smoking_from_Cerner"
 )
-smoking_patientquestionnaire <- readxl::read_xlsx(paste0(here::here(), "/HIVreport_for_smoking.xlsx"),
+smoking_patientquestionnaire <- readxl::read_xlsx(paste0(path, "/RawData",
+                                                         "/CHHIVmethylationClock_HIVreport_for_smoking.xlsx"),
                                 sheet = "Summary_for_smoking"
 )
 
 treatment <- 
-  readxl::read_xlsx(paste0(here::here(), "/CH_HIV_data_treatment status_NG_03.31.23.xlsx")
+  readxl::read_xlsx(paste0(path, "/RawData",
+                           "/CHHIVmethylationClock_CH_HIV_data_treatment status_NG_03.31.23.xlsx")
   ) %>% 
   select(chip_barcode, treatment_status)
 
 CH_status <- 
-  # readxl::read_xlsx(paste0(path, "/raw data/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
-  readxl::read_xlsx(paste0(here::here(), "/CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
+  readxl::read_xlsx(paste0(path, "/RawData",
+                           "/CHHIVmethylationClock_CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
+  # readxl::read_xlsx(paste0(here::here(), "/CHHIVmethylationClock_CICPT2987-combined_calls_03.17.23_FINALwU2AF1.xlsx")) %>%
   rename(CH_status = CH) %>% 
   mutate(MRN = as.character(MRN))
 
 Linked_IDs <- 
   # readxl::read_xlsx(paste0(path, "/raw data/HIV_Participant_ID_update_batch C update.xlsx")) %>% 
-  readxl::read_xlsx(paste0(here::here(), "/dat C update_copy.xlsx")) %>% 
+  readxl::read_xlsx(paste0(path, "/RawData",
+                           "/dat C update_copy.xlsx")) %>% 
   janitor::clean_names() %>% 
   mutate(across(contains("mrn"), ~ as.character(.))) %>% 
   select(chip_barcode, batch, newmrn, pipeline_file_name,
@@ -112,9 +121,9 @@ smoking <- smoking_CR %>%
   mutate(across(-c("MRN", "PATIENT_ID"), ~factor(., levels = c("Never", "Ever"))))
 
 
-data_change <- read_csv(paste0(here::here(), "/id_to_change_data_tx.csv"))
-data_change2 <- read_csv(paste0(here::here(), "/id_to_change_data_tx_after.csv"))
-data_change3 <- read_csv(paste0(here::here(), "/id_to_change_data_date.csv"))
+data_change <- read_csv(paste0(here::here(), "/ProcessedData/id_to_change_data_tx.csv"))
+data_change2 <- read_csv(paste0(here::here(), "/ProcessedData/id_to_change_data_tx_after.csv"))
+data_change3 <- read_csv(paste0(here::here(), "/ProcessedData/id_to_change_data_date.csv"))
 
 CH_HIV_data <- 
   bind_rows(clinical_data_A, clinical_data_B, clinical_data_C) %>% 
@@ -223,7 +232,8 @@ CH_HIV_data <-
 
 
 
-write_rds(CH_HIV_data, "CH_HIV_data_full_03202024.rds")
-write_csv(CH_HIV_data, "CH_HIV_data_03202024.csv")
+write_rds(CH_HIV_data, "CHHIVmethylationClock_analysisdataset_20240320.rds")
+write_csv(CH_HIV_data, paste0(path, "/ProcessedData",
+                              "/CHHIVmethylationClock_analysisdataset_20240320.csv"))
 
 # End cleaning
